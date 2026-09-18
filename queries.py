@@ -18,7 +18,7 @@ from sqlalchemy.engine import URL
 connection_url = URL.create(
     drivername = "mysql+pymysql",   # change for different DBMS
     username   = "root",            # replace with your username
-    password   = "Almos55%",    # replace with your password
+    password   = "yourPassword",    # replace with your password
     host       = "localhost",       # replace with your host
     port       = 3306,              # replace with your port, example port for MySQL and MariaDB.
     database   = "sakila"           # replace with your database name
