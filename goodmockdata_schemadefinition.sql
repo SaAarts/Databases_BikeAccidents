@@ -82,5 +82,5 @@ CREATE TABLE IF NOT EXISTS CyclistAccident (
   accident int NOT NULL REFERENCES Accident (ID),
   serial_num varchar(12) DEFAULT NULL REFERENCES Bicycle (serial_num),
   lethal tinyint(1) DEFAULT NULL,
-  at_fault tinyint(1) DEFAULT NULL
+  at_fault tinyint(1) DEFAULT 0 -- we assume if no data was provided then said person was not at fault
 );
