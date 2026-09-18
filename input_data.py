@@ -1,20 +1,27 @@
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import URL
+import os
+from dotenv import load_dotenv
+from sqlalchemy import create_engine
+from sqlalchemy.engine import URL
 
-# 1. Connection configuration
+# Load environment variables from .env
+load_dotenv()
+
+# Build the connection URL securely
 connection_url = URL.create(
     drivername="mysql+pymysql",
-    username="root",  # replace with your username
-    password="password",  # replace with your password
-    host="localhost",  # replace with your host
-    port=3306,
-    database="your_database_name",  # replace with your target database name
+    username=os.getenv("DB_USER"),
+    password=os.getenv("DB_PASSWORD"),
+    host=os.getenv("DB_HOST", "localhost"),
+    port=int(os.getenv("DB_PORT", 3306)),
+    database=os.getenv("DB_NAME"),
 )
 
 engine = create_engine(connection_url)
 
 # 2. Read the SQL file from the same directory
-sql_file_path = "schema.sql"  # replace with your actual .sql filename
+sql_file_path = "goodmockdata_schemadefinition.sql"  # replace with your actual .sql filename
 
 with open(sql_file_path, "r", encoding="utf-8") as file:
     sql_script = file.read()
