@@ -6,111 +6,81 @@ Changed the name of the junction table of Bicycle and Cyclist from BicycleCyclis
 
 
 -- MockdataGood.AccidentType definition
-CREATE TABLE `AccidentType` (
-  `accdentTypeID` int(11) NOT NULL,
-  `type` varchar(100) DEFAULT NULL,
-  `rain_effect_score` int(10) DEFAULT NULL,
-  PRIMARY KEY (`accdentTypeID`)
+CREATE TABLE IF NOT EXISTS AccidentType (
+  accdentTypeID int PRIMARY KEY AUTO_INCREMENT,
+  type varchar(100) NOT NULL,
+  weather_effect_score int CHECK(BETWEEN 1 and 10) DEFAULT 5 -- how much does weather, like low light effect the certain accident type, like bike with bike/bike with car. 5 is average
 );
 
 -- MockdataGood.Bicycle definition
-CREATE TABLE `Bicycle` (
-  `serial_num` varchar(12) NOT NULL,
-  `brand` varchar(100) DEFAULT NULL,
-  `ebike` tinyint(1) DEFAULT NULL,
-  `fatbike` tinyint(1) DEFAULT NULL,
-  `age` int(11) DEFAULT NULL,
-  PRIMARY KEY (`serial_num`)
+CREATE TABLE IF NOT EXISTS Bicycle (
+  serial_num varchar(12) PRIMARY KEY,
+  brand varchar(100) DEFAULT NULL,
+  ebike tinyint(1) DEFAULT NULL,
+  fatbike tinyint(1) DEFAULT NULL,
+  age int DEFAULT NULL
 );
   
 -- MockdataGood.Cyclist definition
-CREATE TABLE `Cyclist` (
-  `BSN` int(11) NOT NULL,
-  `age` int(11) DEFAULT NULL,
-  `helmet_usually` tinyint(1) DEFAULT NULL,
-  PRIMARY KEY (`BSN`)
+CREATE TABLE IF NOT EXISTS Cyclist (
+  BSN int PRIMARY KEY,
+  age int DEFAULT NULL,
+  helmet_usually tinyint(1) DEFAULT 0 -- most dutch people dont wear helmet so a false assumption is reasonable
 );
 
 -- MockdataGood.DownfallType definition
-CREATE TABLE `DownfallType` (
-  `downfallTypeID` int(11) NOT NULL,
-  `type` varchar(100) DEFAULT NULL,
-  PRIMARY KEY (`downfallTypeID`)
+CREATE TABLE IF NOT EXISTS DownfallType (
+  downfallTypeID int PRIMARY KEY AUTO_INCREMENT,
+  type varchar(100) NOT NULL
 );
 
 -- MockdataGood.ReasonType definition
-CREATE TABLE `ReasonType` (
-  `reasonTypeID` int(11) NOT NULL,
-  `type` varchar(100) DEFAULT NULL,
-  PRIMARY KEY (`reasonTypeID`)
+CREATE TABLE IF NOT EXISTS ReasonType (
+  reasonTypeID int PRIMARY KEY AUTO_INCREMENT,
+  type varchar(100) NOT NULL
 );
 
 -- MockdataGood.RoadType definition
-CREATE TABLE `RoadType` (
-  `roadTypeID` int(11) NOT NULL,
-  `type` varchar(100) DEFAULT NULL,
-  `rain_effect_score` int(10) DEFAULT NULL,
-  PRIMARY KEY (`roadTypeID`)
+CREATE TABLE IF NOT EXISTS RoadType (
+  roadTypeID int PRIMARY KEY AUTO_INCREMENT,
+  type varchar(100) NOT NULL,
+  rain_effect_score int(10) CHECK(BETWEEN 1 and 10) DEFAULT 5 -- 5 is average, if no data was added we assume average
 );
 
 -- MockdataGood.BicycleOwnership definition
-CREATE TABLE `BicycleOwnership` (
-  `bicycleCyclistID` int(11) NOT NULL AUTO_INCREMENT,
-  `cyclist` int(11) DEFAULT NULL,
-  `bike` varchar(12) DEFAULT NULL,
-  PRIMARY KEY (`bicycleCyclistID`),
-  KEY `BicycleOwnership_Cyclist_FK` (`cyclist`),
-  KEY `BicycleOwnership_Bicycle_FK` (`bike`),
-  CONSTRAINT `BicycleOwnership_Bicycle_FK` FOREIGN KEY (`bike`) REFERENCES `Bicycle` (`serial_num`),
-  CONSTRAINT `BicycleOwnership_Cyclist_FK` FOREIGN KEY (`cyclist`) REFERENCES `Cyclist` (`BSN`)
+CREATE TABLE IF NOT EXISTS BicycleOwnership (
+  bicycleCyclistID int PRIMARY KEY AUTO_INCREMENT,
+  cyclist int NOT NULL REFERENCES Cyclist (BSN),
+  bike varchar(12) NOT NULL REFERENCES Bicycle (serial_num)
 );
 
 -- MockdataGood.Location definition
-CREATE TABLE `Location` (
-  `placeID` int(11) NOT NULL AUTO_INCREMENT,
-  `city` varchar(25) DEFAULT NULL,
-  `street` varchar(100) DEFAULT NULL,
-  `road_quality_score` int(10) DEFAULT NULL,
-  `road_type` int(11) DEFAULT NULL,
-  PRIMARY KEY (`placeID`),
-  KEY `Location_RoadType_FK` (`road_type`),
-  CONSTRAINT `Location_RoadType_FK` FOREIGN KEY (`road_type`) REFERENCES `RoadType` (`roadTypeID`)
+CREATE TABLE IF NOT EXISTS Location (
+  placeID int PRIMARY KEY AUTO_INCREMENT,
+  city varchar(27) NOT NULL, --longest we found is 27 letters: Westerhaar-Vriezenveensewijk
+  street varchar(100) NOT NULL, -- in intersections always the street the biker at fault was coming from
+  road_quality_score int(10) CHECK(BETWEEN 1 and 10) DEFAULT NULL,
+  road_type int DEFAULT NULL REFERENCES RoadType (roadTypeID),
 );
 
 -- MockdataGood.Accident definition
-CREATE TABLE `Accident` (
-  `ID` int(11) NOT NULL AUTO_INCREMENT,
-  `type` int(11) DEFAULT NULL,
-  `time` date DEFAULT NULL,
-  `reason` int(11) DEFAULT NULL,
-  `downfall` int(11) DEFAULT NULL,
-  `location` int(11) DEFAULT NULL,
-  `temperature` int(11) DEFAULT NULL,
-  `road_wet` tinyint(1) DEFAULT NULL,
-  PRIMARY KEY (`ID`),
-  KEY `Accident_AccidentType_FK` (`type`),
-  KEY `Accident_ReasonType_FK` (`reason`),
-  KEY `Accident_DownfallType_FK` (`downfall`),
-  KEY `Accident_Location_FK` (`location`),
-  CONSTRAINT `Accident_AccidentType_FK` FOREIGN KEY (`type`) REFERENCES `AccidentType` (`accdentTypeID`),
-  CONSTRAINT `Accident_DownfallType_FK` FOREIGN KEY (`downfall`) REFERENCES `DownfallType` (`downfallTypeID`),
-  CONSTRAINT `Accident_Location_FK` FOREIGN KEY (`location`) REFERENCES `Location` (`placeID`),
-  CONSTRAINT `Accident_ReasonType_FK` FOREIGN KEY (`reason`) REFERENCES `ReasonType` (`reasonTypeID`)
+CREATE TABLE IF NOT EXISTS Accident (
+  ID int PRIMARY KEY AUTO_INCREMENT,
+  time datetime NOT NULL,
+  type int NOT NULL REFERENCES AccidentType (accdentTypeID),
+  reason int DEFAULT NULL REFERENCES ReasonType (reasonTypeID),
+  downfall int DEFAULT NULL REFERENCES DownfallType (downfallTypeID),
+  location int DEFAULT NULL REFERENCES Location (placeID),
+  temperature smallint DEFAULT NULL,
+  road_wet tinyint(1) DEFAULT NULL
 );
 
 -- MockdataGood.CyclistAccident definition
-CREATE TABLE `CyclistAccident` (
-  `cyclistAccidentID` int(11) NOT NULL AUTO_INCREMENT,
-  `cyclist` int(11) DEFAULT NULL,
-  `accident` int(11) DEFAULT NULL,
-  `serial_num` varchar(12) DEFAULT NULL,
-  `lethal` tinyint(1) DEFAULT NULL,
-  `at_fault` tinyint(1) DEFAULT NULL,
-  PRIMARY KEY (`cyclistAccidentID`),
-  KEY `CyclistAccident_Cyclist_FK` (`cyclist`),
-  KEY `CyclistAccident_Accident_FK` (`accident`),
-  KEY `CyclistAccident_Bicycle_FK` (`serial_num`),
-  CONSTRAINT `CyclistAccident_Accident_FK` FOREIGN KEY (`accident`) REFERENCES `Accident` (`ID`),
-  CONSTRAINT `CyclistAccident_Bicycle_FK` FOREIGN KEY (`serial_num`) REFERENCES `Bicycle` (`serial_num`),
-  CONSTRAINT `CyclistAccident_Cyclist_FK` FOREIGN KEY (`cyclist`) REFERENCES `Cyclist` (`BSN`)
+CREATE TABLE IF NOT EXISTS CyclistAccident (
+  cyclistAccidentID int PRIMARY KEY AUTO_INCREMENT,
+  cyclist int NOT NULL REFERENCES Cyclist (BSN),
+  accident int NOT NULL REFERENCES Accident (ID),
+  serial_num varchar(12) DEFAULT NULL REFERENCES Bicycle (serial_num),
+  lethal tinyint(1) DEFAULT NULL,
+  at_fault tinyint(1) DEFAULT NULL
 );
